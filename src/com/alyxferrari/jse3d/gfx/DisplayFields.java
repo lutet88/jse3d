@@ -27,6 +27,8 @@ public class DisplayFields {
 	long optimalTime; // time variable used by FPS timer
 	Point lastMousePos; // mouse variable used by view angle changers
 	boolean mouseClicked; // mouse variable used by view angle changers
+	boolean[] keyboardStates; // 65536-size array to store keyboard states
+	boolean[] mouseStates; // array to store mouse states
 	Point mouseDiff; // mouse variable used by view angle changers
 	Vector3 camPos; // current camera position in relation to (0,0,0)
 	Distance[][] distance; // used internally by scene renderer, represents distances between points and the camera

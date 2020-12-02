@@ -14,12 +14,9 @@ import java.awt.Dimension;
 import com.alyxferrari.jse3d.enums.RenderTarget;
 import java.awt.MouseInfo;
 import com.alyxferrari.jse3d.JSE3DConst;
-import java.awt.event.WindowListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelListener;
-import java.awt.event.MouseWheelEvent;
+
+import java.awt.event.*;
+
 import com.aparapi.device.Device;
 import java.util.ConcurrentModificationException;
 import com.aparapi.Range;
@@ -278,6 +275,7 @@ public class Display {
 		fields.optimalTime = 1000000000/fields.settings.targetFps;
 		fields.renderer.addMouseListener(new ClickListener());
 		fields.renderer.addMouseWheelListener(new ScrollListener());
+		fields.renderer.addKeyListener(new KeyboardListener());
 		fields.mouseClicked = false;
 		fields.camPos = new Vector3(0, 0, 0);
 		fields.mouseDiff = new Point(0, 0);
@@ -288,6 +286,8 @@ public class Display {
 			@Override public void preRender(Graphics graphics) {}
 			@Override public void postRender(Graphics graphics) {}
 		};
+		fields.keyboardStates = new boolean[65536];
+		fields.mouseStates = new boolean[MouseInfo.getNumberOfButtons() + 1];
 		setCameraMode(CameraMode.DRAG);
 		setCameraPositionPrecision(PrecisionMode.FLOAT);
 	}
@@ -415,6 +415,9 @@ public class Display {
 			positionRenderer = new Runnable() {
 				@Override public void run() {}
 			};
+			setFocusable(true);
+			requestFocus();
+			requestFocusInWindow();
 		}
 		public void render() {
 			try {
@@ -858,12 +861,14 @@ public class Display {
 	protected class ClickListener implements MouseListener { // calculations for CameraMode.DRAG
 		public void mouseEntered(MouseEvent ev) {}
 		public void mousePressed(MouseEvent ev) {
+			fields.mouseStates[ev.getButton()] = true;
 			fields.mouseClicked = true;
 			Point temp = new Point(MouseInfo.getPointerInfo().getLocation().x-fields.frame.getLocationOnScreen().x, MouseInfo.getPointerInfo().getLocation().y-fields.frame.getLocationOnScreen().y);
 			fields.mouseDiff = new Point(temp.x-fields.lastMousePos.x, temp.y-fields.lastMousePos.y);
 		}
 		public void mouseClicked(MouseEvent ev) {}
 		public void mouseReleased(MouseEvent ev) {
+			fields.mouseStates[ev.getButton()] = false;
 			fields.mouseClicked = false;
 			Point temp = new Point(MouseInfo.getPointerInfo().getLocation().x-fields.frame.getLocationOnScreen().x, MouseInfo.getPointerInfo().getLocation().y-fields.frame.getLocationOnScreen().y);
 			fields.lastMousePos = new Point(temp.x-fields.mouseDiff.x, temp.y-fields.mouseDiff.y);
@@ -881,6 +886,49 @@ public class Display {
 				}
 			}
 		}
+	}
+	protected class KeyboardListener extends KeyAdapter {
+		public void keyTyped(KeyEvent ke) {}
+		public void keyPressed(KeyEvent ke) {
+			fields.keyboardStates[ke.getKeyCode()] = true;
+		}
+		public void keyReleased(KeyEvent ke) {
+			fields.keyboardStates[ke.getKeyCode()] = false;
+		}
+	}
+	/** Gets the status of the mouse, representing display.
+	 * @return A boolean representing whether any mouse button is clicked.
+	 */
+	public boolean getDisplayClickedState(){
+		return fields.mouseClicked;
+	}
+	/** Gets a single mouse click state.
+	 * @param button The button to query.
+	 * @return The state of the button queried.
+	 */
+	public boolean getMouseState(int button){
+		if (button > MouseInfo.getNumberOfButtons() || button < 0) { return false; }
+		return fields.mouseStates[button];
+	}
+	/** Gets a single keyboard key state.
+	 * @param keyCode The keyCode to query.
+	 * @return The state of the keyCode queried.
+	 */
+	public boolean getKeyState(int keyCode){
+		if (keyCode > 65535 || keyCode < 0) { return false; }
+		return fields.keyboardStates[keyCode];
+	}
+	/** Gets all keyboard key states.
+	 * @return boolean array of size 65536 representing the current state of all possible keyCodes.
+	 */
+	public boolean[] getKeyStates(){
+		return fields.keyboardStates;
+	}
+	/** Gets all mouse button states.
+	 * @return boolean array representing the current state of all mouse buttons.
+	 */
+	public boolean[] getMouseStates(){
+		return fields.mouseStates;
 	}
 	/** Sets the Display's FPS cap.
 	 * @param fps The new FPS cap.

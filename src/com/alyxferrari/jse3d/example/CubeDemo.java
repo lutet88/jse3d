@@ -1,6 +1,7 @@
 package com.alyxferrari.jse3d.example;
 import com.alyxferrari.jse3d.gfx.*;
 import java.awt.*;
+import java.awt.event.*;
 import com.alyxferrari.jse3d.enums.*;
 import com.alyxferrari.jse3d.obj.*;
 /** Demo for cube rendering.
